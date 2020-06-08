@@ -24,8 +24,47 @@ import basededatos from './basededatos';
 export const materiasAprobadasByNombreAlumno = (nombreAlumno) => {
   // Ejemplo de como accedo a datos dentro de la base de datos
   // console.log(basededatos.alumnos);
-  return [];
+  
+  let idAlumno = alumnoByNombre(nombreAlumno);
+  let materias = [];
+  if (idAlumno) {
+    for (let i = 0; i < basededatos.calificaciones.length; i++) {
+      let cal = basededatos.calificaciones[i];
+      if (cal.nota >= 4 && cal.alumno === idAlumno) {
+        materias.push(materiaById(cal.materia));
+      }
+    }
+  }
+  return materias;
 };
+
+const alumnoByNombre = (nombreAlumno) => {
+  for (let i = 0; i < basededatos.alumnos.length; i++) {
+    if (basededatos.alumnos[i].nombre === nombreAlumno) {
+      return basededatos.alumnos[i].id;
+    }
+  }
+}
+
+const materiaById = (id) => {
+  for (let i = 0; i < basededatos.materias.length; i++) {
+    if (basededatos.materias[i].id === id) {
+      return basededatos.materias[i];
+    }
+  }
+  return -1;
+}
+
+const alumnoById = (id) => {
+  for (let i = 0; i < basededatos.alumnos.length; i++) {
+    if (basededatos.alumnos[i].id === id) {
+      return basededatos.alumnos[i];
+    }
+  }
+  return -1;
+}
+
+
 
 /**
  * Devuelve informacion ampliada sobre una universidad.
@@ -69,8 +108,66 @@ export const materiasAprobadasByNombreAlumno = (nombreAlumno) => {
  * @param {string} nombreUniversidad
  */
 export const expandirInfoUniversidadByNombre = (nombreUniversidad) => {
-  return {};
+  let resultado;
+  let u = universidadByNombre(nombreUniversidad);
+  let materias = [];
+  let profes = [];
+  let alumnos = [];
+  let idProfe;
+  if (u) {
+    for (let i = 0; i < basededatos.materias.length; i++) {
+      if (basededatos.materias[i].universidad === u.id) {
+        materias.push(basededatos.materias[i]);
+        for (let j = 0; j < basededatos.materias[i].profesores.length ; j++) {
+          idProfe = basededatos.materias[i].profesores[j];
+          let unProfe = buscarProfesorById(idProfe); 
+          if (! yaExiste(unProfe.id, profes)) {
+            profes.push (unProfe);
+          }
+        }
+
+        for (let x = 0; x < basededatos.calificaciones.length; x ++) {
+          if (basededatos.calificaciones[x].materia === basededatos.materias[i].id) {
+            let unAlumno = alumnoById(basededatos.calificaciones[x].alumno);
+            if (! yaExiste(unAlumno.id, alumnos)) {
+              alumnos.push(alumnoById(basededatos.calificaciones[x].alumno));
+            }
+          }
+        }
+      }
+    }
+    u.materias = materias;
+    u.profesores = profes;
+    u.alumnos = alumnos;
+  }
+  return u;
 };
+
+const yaExiste = (id, arra) => {
+  for (let x = 0; x < arra.length; x ++) {
+    if (arra[x].id === id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const buscarProfesorById = (id) => {
+  for (let i = 0; i < basededatos.profesores.length; i++) {
+    if (basededatos.profesores[i].id === id) {
+      return basededatos.profesores[i];
+    }
+  }
+  return -1;
+}
+const universidadByNombre = (nombre) => {
+  for (let i = 0; i < basededatos.universidades.length; i++) {
+    if (basededatos.universidades[i].nombre === nombre) {
+      return basededatos.universidades[i];
+    }
+  }
+  return -1;
+}
 
 // /**
 //  * Devuelve el promedio de edad de los alumnos.
